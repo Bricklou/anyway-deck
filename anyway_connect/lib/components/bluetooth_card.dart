@@ -17,6 +17,7 @@ class _BluetoothCard extends State<BluetoothCard> {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
+        constraints: const BoxConstraints(minHeight: 180),
         decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
@@ -53,20 +54,20 @@ class _BluetoothCard extends State<BluetoothCard> {
                         color: Theme.of(context).colorScheme.secondary))),
             Container(
                 padding: const EdgeInsets.all(10).copyWith(
-                  top: 45,
+                  top: 55,
                 ),
                 child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
-                      Expanded(
-                          child: Center(
-                              child: Icon(Icons.bluetooth,
-                                  size: 50,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .secondary
-                                      .withOpacity(0.8)))),
-                      const SizedBox(height: 10),
+                      Center(
+                          child: Icon(Icons.bluetooth,
+                              size: 50,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary
+                                  .withOpacity(0.8))),
                       Consumer<BluetoothProvider>(
                           builder: (context, bluetoothProvider, _) =>
                               renderBtButton(bluetoothProvider)),
@@ -97,9 +98,12 @@ class _BluetoothCard extends State<BluetoothCard> {
       // If there is no pending connection
       if (!bluetoothProvider.isConnected ||
           !bluetoothProvider.isDeviceSelected) {
-        return const Center(
-            child: Text('No device selected',
-                textAlign: TextAlign.center, style: textStyle));
+        return const Padding(
+          padding: EdgeInsets.only(bottom: 14.0),
+          child: Center(
+              child: Text('No device selected',
+                  textAlign: TextAlign.center, style: textStyle)),
+        );
       }
 
       // Otherwise, if there is a connection

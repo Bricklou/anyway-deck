@@ -56,6 +56,9 @@ class BluetoothProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    if (_bluetoothConnection != null) {
+      _bluetoothConnection!.close();
+    }
     FlutterBluetoothSerial.instance.setPairingRequestHandler(null);
     super.dispose();
   }
