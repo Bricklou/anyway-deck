@@ -1,9 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:anyway_connect/components/action_card.dart';
 import 'package:anyway_connect/components/bluetooth_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:provider/provider.dart';
+
+import '../models_provider/bluetooth_provider.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,28 +14,11 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPage extends State<MainPage> {
-  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-  BluetoothConnection? _bluetoothConnection;
-
   @override
   void initState() {
     super.initState();
 
-    // Get the current state
-    FlutterBluetoothSerial.instance.state.then((state) {
-      setState(() {
-        _bluetoothState = state;
-      });
-    });
-
-    // Listen for further state changes
-    FlutterBluetoothSerial.instance
-        .onStateChanged()
-        .listen((BluetoothState state) {
-      setState(() {
-        _bluetoothState = state;
-      });
-    });
+    context.read<BluetoothProvider>().init();
   }
 
   @override
@@ -47,7 +31,7 @@ class _MainPage extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: renderAppBar(context),
-      body: renderBody(context),
+      body: SafeArea(child: renderBody(context)),
     );
   }
 
@@ -115,9 +99,7 @@ class _MainPage extends State<MainPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            BluetoothCard(
-                bluetoothConnection: _bluetoothConnection,
-                onConnectionChange: _onBluetoothConnectionChange),
+            const BluetoothCard(),
             const SizedBox(width: 10),
             ActionCard(
               'WebRTC server',
@@ -127,30 +109,5 @@ class _MainPage extends State<MainPage> {
         ))
       ]),
     );
-  }
-
-  void _onBluetoothConnectionChange(BluetoothConnection? connection) {
-    setState(() {
-      _bluetoothConnection = connection;
-    });
-
-    if (_bluetoothConnection != connection) {
-      _bluetoothConnection?.close();
-      _bluetoothConnection = connection;
-    }
-
-    if (_bluetoothConnection == null) {
-      return;
-    }
-
-    _bluetoothConnection?.input!.listen(_onDataReceived).onDone(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  void _onDataReceived(Uint8List data) {
-
   }
 }

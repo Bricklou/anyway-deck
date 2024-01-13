@@ -8,14 +8,12 @@ class AnywayConnect extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Anyway Connect',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange, brightness: Brightness.light),
         useMaterial3: true,
       ),
-      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange, brightness: Brightness.dark),
-      ),
-      home: const SafeArea(child: MainPage()),
+      home: const MainPage(),
     );
   }
 }

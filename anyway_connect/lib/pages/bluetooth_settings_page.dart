@@ -154,11 +154,13 @@ class _BluetoothSettingsPage extends State<BluetoothSettingsPage> {
                     rssi: result.rssi);
               });
             } catch (ex) {
+              if (!context.mounted) return;
+
               await showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('Error occured while bonding'),
+                    title: const Text('Error occurred while bonding'),
                     content: Text(ex.toString()),
                     actions: <Widget>[
                       TextButton(

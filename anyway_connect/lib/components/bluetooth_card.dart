@@ -1,48 +1,18 @@
 import 'package:anyway_connect/pages/bluetooth_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:provider/provider.dart';
+
+import '../models_provider/bluetooth_provider.dart';
 
 class BluetoothCard extends StatefulWidget {
-  const BluetoothCard(
-      {super.key, this.bluetoothConnection, required this.onConnectionChange});
-
-  final void Function(BluetoothConnection?) onConnectionChange;
-  final BluetoothConnection? bluetoothConnection;
+  const BluetoothCard({super.key});
 
   @override
   State<StatefulWidget> createState() => _BluetoothCard();
 }
 
 class _BluetoothCard extends State<BluetoothCard> {
-  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-  BluetoothDevice? _device;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Get current state
-    FlutterBluetoothSerial.instance.state.then((state) {
-      setState(() {
-        _bluetoothState = state;
-      });
-    });
-
-    FlutterBluetoothSerial.instance
-        .onStateChanged()
-        .listen((BluetoothState state) {
-      setState(() {
-        _bluetoothState = state;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    FlutterBluetoothSerial.instance.setPairingRequestHandler(null);
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -97,7 +67,9 @@ class _BluetoothCard extends State<BluetoothCard> {
                                       .secondary
                                       .withOpacity(0.8)))),
                       const SizedBox(height: 10),
-                      renderBtButton(),
+                      Consumer<BluetoothProvider>(
+                          builder: (context, bluetoothProvider, _) =>
+                              renderBtButton(bluetoothProvider)),
                     ]))
           ],
         ),
@@ -105,14 +77,15 @@ class _BluetoothCard extends State<BluetoothCard> {
     );
   }
 
-  Widget renderBtButton() {
+  Widget renderBtButton(BluetoothProvider bluetoothProvider) {
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
-      if (!_bluetoothState.isEnabled) {
+      // If bluetooth is not enabled
+      if (!bluetoothProvider.state.isEnabled) {
         return ElevatedButton(
           child: const Text('Enable Bluetooth'),
           onPressed: () async {
-            await FlutterBluetoothSerial.instance.requestEnable();
+            await bluetoothProvider.requestEnable();
             setState(() {});
           },
         );
@@ -122,17 +95,17 @@ class _BluetoothCard extends State<BluetoothCard> {
           fontSize: 14, fontWeight: FontWeight.w400, color: Colors.black54);
 
       // If there is no pending connection
-      if (widget.bluetoothConnection == null ||
-          !widget.bluetoothConnection!.isConnected ||
-          _device == null) {
+      if (!bluetoothProvider.isConnected ||
+          !bluetoothProvider.isDeviceSelected) {
         return const Center(
             child: Text('No device selected',
                 textAlign: TextAlign.center, style: textStyle));
       }
 
       // Otherwise, if there is a connection
+      final device = bluetoothProvider.connectedDevice!;
       return Center(
-          child: Text('Connected to ${_device!.name ?? _device!.address}',
+          child: Text('Connected to ${device.name ?? device.address}',
               textAlign: TextAlign.center, style: textStyle));
     });
   }
@@ -147,11 +120,9 @@ class _BluetoothCard extends State<BluetoothCard> {
     }
 
     setState(() {
-      _device = selectedDevice;
-    });
-
-    BluetoothConnection.toAddress(selectedDevice.address).then((connection) {
-      widget.onConnectionChange(connection);
+      // Connect to the selected device
+      final bluetoothProvider = context.read<BluetoothProvider>();
+      bluetoothProvider.connect(selectedDevice);
     });
   }
 }
