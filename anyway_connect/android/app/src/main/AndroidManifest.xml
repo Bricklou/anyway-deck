@@ -3,23 +3,37 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
 
-    <!-- Needed only if your app looks for Bluetooth devices.
+    <!-- Needed to look for Bluetooth devices.
          If your app doesn't use Bluetooth scan results to derive physical
          location information, you can
          <a href="#assert-never-for-location">strongly assert that your app
          doesn't derive physical location</a>. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
 
-    <!-- Needed only if your app makes the device discoverable to Bluetooth
+    <!-- Needed to make the device discoverable to Bluetooth
          devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
 
-    <!-- Needed only if your app communicates with already-paired Bluetooth
+    <!-- Needed to communicate with already-paired Bluetooth
          devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <!-- Needed only if your app uses Bluetooth scan results to derive physical location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+
+    <!-- Needed to access the camera. -->
+    <uses-feature android:name="android.hardware.camera" />
+
+    <!-- Needed to access the camera focus feature -->
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <!-- Needed to access the camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Needed to access the local network -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <application
             android:label="anyway_connect"
