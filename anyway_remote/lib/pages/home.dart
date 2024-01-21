@@ -1,9 +1,9 @@
+import 'package:anyway_remote/components/connect_form.dart';
+import 'package:anyway_remote/components/past_connections.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
-  static const routeName = '/';
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -11,14 +11,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: _renderAppBar(context),
       body: _renderBody(),
     );
@@ -26,7 +20,7 @@ class _HomePageState extends State<HomePage> {
 
   AppBar _renderAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       elevation: 0,
       title: const Text('Anyway Connect',
           style: TextStyle(
@@ -37,8 +31,55 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _renderBody() {
-    return const Center(
-      child: Text('Home Page'),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Column(crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+          _renderHeaderCard(),
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Past Connections',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Expanded(child: PastConnections())
+        ])
+      ],
     );
+  }
+
+  Widget _renderHeaderCard() {
+    return Container(
+        width: double.maxFinite,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 40),
+            Container(
+              height: 70,
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: const ConnectForm(),
+            ),
+          ],
+        ));
   }
 }
