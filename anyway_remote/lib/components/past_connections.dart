@@ -50,30 +50,35 @@ class _PastConnectionsState extends State<PastConnections> {
         final connection = pastConnections[index];
 
         return ListTile(
-          leading: const Icon(Icons.devices),
-          hoverColor: Colors.black,
-          title: Text("${connection.ip}:${connection.port}"),
-          subtitle: Text("${connection.date}"),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => MainPage(connection: connection)));
-                  },
-                  icon: const Icon(Icons.link)),
-              IconButton(
-                  onPressed: () {
-                    final tcpClientProvider = context.read<TcpClientProvider>();
-                    tcpClientProvider.deleteHistoryEntry(connection);
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.delete))
-            ],
-          )
-        );
+            leading: const Icon(Icons.devices),
+            onTap: () => _connectToItem(connection),
+            hoverColor: Colors.black12,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+            title: Text("${connection.ip}:${connection.port}",
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600)),
+            subtitle: Text("${connection.date}"),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                    onPressed: () {
+                      final tcpClientProvider =
+                          context.read<TcpClientProvider>();
+                      tcpClientProvider.deleteHistoryEntry(connection);
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.delete))
+              ],
+            ));
       },
     );
+  }
+
+  void _connectToItem(DatedRemoteClient connection) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) =>
+            MainPage(connection: connection)));
   }
 }

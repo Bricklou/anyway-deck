@@ -56,7 +56,14 @@ class _MainPageState extends State<MainPage> {
                         const Icon(Icons.arrow_back, color: Colors.black54))),
             const Positioned.fill(
                 child: Center(
-              child: Text('Waiting for connection'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Waiting for connection'),
+                ],
+              ),
             ))
           ],
         ));

@@ -66,7 +66,7 @@ class TcpClientProvider with ChangeNotifier {
       throw Exception('Failed to connect to server');
     });
 
-    print("socket: $_socket");
+    notifyListeners();
   }
 
   void send<T extends TcpPacket>(T packet) {
