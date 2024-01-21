@@ -1,0 +1,4 @@
+enum PacketId  {
+  initConnection,
+  endConnection,
+}

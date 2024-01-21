@@ -56,14 +56,13 @@ class _MainPage extends State<MainPage> {
             ),
             child: Icon(Icons.settings,
                 color: Theme.of(context).colorScheme.secondary)),
-        const SizedBox(width: 10)
       ],
     );
   }
 
   Widget renderBody(BuildContext context) {
     return Stack(
-      alignment: Alignment.centerRight,
+      alignment: Alignment.center,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +85,6 @@ class _MainPage extends State<MainPage> {
                 ],
               ),
             )
-            /*BodyCard()*/
           ],
         )
       ],

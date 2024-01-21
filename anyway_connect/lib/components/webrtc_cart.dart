@@ -1,4 +1,7 @@
+import 'package:anyway_connect/models/TcpPacket.dart';
+import 'package:anyway_connect/models_provider/tcp_server_provider.dart';
 import 'package:anyway_connect/models_provider/webrtc_provider.dart';
+import 'package:anyway_connect/utils/data_transformation_layer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +30,7 @@ class _WebRtcCard extends State<WebRtcCard> {
                 ]),
             child: Stack(
               children: [
+                // Card title
                 const Positioned(
                     top: 15,
                     left: 15,
@@ -35,7 +39,9 @@ class _WebRtcCard extends State<WebRtcCard> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.black54))),
-                Positioned(
+
+                // WebRTC settings button
+                /* Positioned(
                     top: 3,
                     right: -5,
                     child: ElevatedButton(
@@ -46,45 +52,85 @@ class _WebRtcCard extends State<WebRtcCard> {
                           shadowColor: Colors.transparent,
                         ),
                         child: Icon(Icons.settings,
-                            color: Theme.of(context).colorScheme.secondary))),
+                            color: Theme.of(context).colorScheme.secondary))),*/
+                // Card content
                 Container(
                     padding: const EdgeInsets.all(10).copyWith(
                       top: 55,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Center(
-                            child: Icon(Icons.desktop_windows_outlined,
-                                size: 50,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .secondary
-                                    .withOpacity(0.8))),
-                        Consumer<WebRtcProvider>(
-                            builder: (context, webrtcProvider, _) =>
-                                renderWebRtcButton(webrtcProvider)),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Consumer2<WebRtcProvider, TcpServerProvider>(
+                          builder:
+                              (context, webrtcProvider, tcpServerProvider, _) =>
+                                  renderWebRtcButton(
+                                      webrtcProvider, tcpServerProvider)),
                     ))
               ],
             )));
   }
 
-  Widget renderWebRtcButton(WebRtcProvider webRtcProvider) {
-    return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-      return ElevatedButton(
-          onPressed: () async {
-            if (webRtcProvider.isConnected) {
-              await webRtcProvider.disable();
-            } else {
-              await webRtcProvider.enable();
-            }
-          },
-          child: Text(
-              webRtcProvider.isConnected ? 'Disable WebRTC' : 'Enable WebRTC'));
-    });
+  Widget renderWebRtcButton(
+      WebRtcProvider webRtcProvider, TcpServerProvider tcpServerProvider) {
+    // If the TCP server is not enabled, then show a button to enable it
+    if (!tcpServerProvider.isRunning) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          // WebRTC icon
+          Center(
+              child: Icon(Icons.desktop_windows_outlined,
+                  size: 50,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .secondary
+                      .withOpacity(0.8))),
+
+          // Enable WebRTC button
+          ElevatedButton(
+              onPressed: () async {
+                await _enableServer(webRtcProvider, tcpServerProvider);
+              },
+              child: const Text('Enable WebRTC')),
+        ],
+      );
+    }
+
+    const textStyle = TextStyle(
+        fontSize: 14, fontWeight: FontWeight.w400, color: Colors.black54);
+
+    // Otherwise, show a button to disable everything and the server address
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Text(
+          'Server address: ${tcpServerProvider.address}:${tcpServerProvider.port}',
+          textAlign: TextAlign.center,
+          style: textStyle,
+        ),
+        ElevatedButton(
+            onPressed: () async {
+              await _disableServer(webRtcProvider, tcpServerProvider);
+            },
+            child: const Text('Disable WebRTC')),
+      ],
+    );
+  }
+
+  Future<void> _enableServer(WebRtcProvider webRtcProvider,
+      TcpServerProvider tcpServerProvider) async {
+    await tcpServerProvider.enable();
+    //await webRtcProvider.enable();
+    tcpServerProvider.listen(transformData(webRtcProvider));
+  }
+
+  Future<void> _disableServer(WebRtcProvider webRtcProvider,
+      TcpServerProvider tcpServerProvider) async {
+    await webRtcProvider.disable();
+    tcpServerProvider.disable();
   }
 }
