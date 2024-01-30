@@ -41,12 +41,21 @@ class TcpServerProvider with ChangeNotifier {
     super.dispose();
   }
 
-  void listen(Future<void> Function(TcpPacket data) callback) {
+  void listen(Future<void> Function(TcpPacket data, Socket socket) callback) {
     _serverSocket?.listen((socket) {
+      print('Client connected from ${socket.remoteAddress.address}:${socket.remotePort}');
+
       socket.listen((data) async {
         final TcpPacket packet = _processPacket(data);
-        callback(packet);
+        callback(packet, socket);
       });
+    });
+  }
+
+  void broadcast(TcpPacket packet) {
+    _serverSocket?.forEach((socket) {
+      socket.add(packet.toBytes());
+      socket.flush();
     });
   }
 
@@ -69,7 +78,14 @@ class TcpServerProvider with ChangeNotifier {
     // Parse the packet
     switch (packetId) {
       case PacketId.initConnection:
-        return InitConnectionPacket().fromBytes(packet) as T;
+        print('InitConnectionPacket');
+        return InitConnectionPacket.fromBytes(packet) as T;
+      case PacketId.iceCandidate:
+        print('IceCandidatePacket');
+        return IceCandidatePacket.fromBytes(packet) as T;
+      case PacketId.sdpDescription:
+        print('SdpDescriptionPacket');
+        return SdpDescriptionPacket.fromBytes(packet) as T;
       default:
         throw Exception('Invalid packet');
     }

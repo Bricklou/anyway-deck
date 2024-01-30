@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../models/client_packets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/packets_id.dart';
 
 class RemoteClient {
   final String ip;
@@ -45,6 +48,7 @@ class TcpClientProvider with ChangeNotifier {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    notifyListeners();
   }
 
   @override
@@ -66,12 +70,15 @@ class TcpClientProvider with ChangeNotifier {
       throw Exception('Failed to connect to server');
     });
 
+    print("Connected to ${remoteClient.ip}:${remoteClient.port}");
+
     notifyListeners();
   }
 
   void send<T extends TcpPacket>(T packet) {
     // Send packet
     _socket?.add(packet.toBytes());
+    _socket?.flush();
   }
 
   void disconnect() {
@@ -105,7 +112,7 @@ class TcpClientProvider with ChangeNotifier {
   }
 
   Future<List<DatedRemoteClient>> listHistory() async {
-    final history = _prefs!.getStringList("history");
+    final history = _prefs?.getStringList("history");
 
     if (history == null) {
       return [];
@@ -139,5 +146,43 @@ class TcpClientProvider with ChangeNotifier {
         "history", previousHistory.map(_mapEntryToString).toList());
 
     notifyListeners();
+  }
+
+
+
+  void listen(Future<void> Function(TcpPacket data, Socket socket) callback) {
+    _socket?.listen((data) {
+        final TcpPacket packet = _processPacket(data);
+        callback(packet, _socket!);
+    });
+  }
+
+  T _processPacket<T extends TcpPacket>(Uint8List packet) {
+    // Check if the packet is valid
+    if (packet.isEmpty) {
+      throw Exception('Invalid packet');
+    }
+
+    // Get the packet type
+    final int index = packet[0];
+    // Ensure the index is valid
+    if (index < 0 || index >= PacketId.values.length) {
+      throw Exception('Invalid packet');
+    }
+
+    // Get the packet type
+    final PacketId packetId = PacketId.values[index];
+
+    // Parse the packet
+    switch (packetId) {
+      case PacketId.sdpDescription:
+        print('SdpDescriptionPacket');
+        return SdpDescriptionPacket.fromBytes(packet) as T;
+      case PacketId.iceCandidate:
+        print('IceCandidatePacket');
+        return IceCandidatePacket.fromBytes(packet) as T;
+      default:
+        throw Exception('Invalid packet');
+    }
   }
 }

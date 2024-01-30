@@ -1,7 +1,11 @@
+import 'package:anyway_remote/models/client_packets.dart';
 import 'package:anyway_remote/models_provider/tcp_client_provider.dart';
+import 'package:anyway_remote/utils/data_transformation_layer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
+
+import '../models_provider/webrtc_provider.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key, required this.connection});
@@ -13,20 +17,43 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  TcpClientProvider? tcpClientProvider;
+  WebRtcProvider? webRtcProvider;
+
   @override
   void initState() {
     super.initState();
+    _init();
+  }
 
-    final tcpClientProvider = context.read<TcpClientProvider>();
+  Future<void> _init() async {
+    tcpClientProvider = context.read<TcpClientProvider>();
+    webRtcProvider = context.read<WebRtcProvider>();
 
-    tcpClientProvider
-        .init()
-        .then((_) => tcpClientProvider.connect(widget.connection))
-        .catchError((e) {
+    try {
+      await tcpClientProvider!.init();
+      await tcpClientProvider!.connect(widget.connection);
+      print('connected to ${widget.connection.ip}:${widget.connection.port}');
+      tcpClientProvider!.send(InitConnectionPacket());
+      print('sent init packet');
+
+      webRtcProvider!.onIceCandidate = (candidate) {
+        tcpClientProvider!.send(IceCandidatePacket.fromCandidate(candidate));
+      };
+
+      tcpClientProvider!
+          .listen(transformData(webRtcProvider!, tcpClientProvider!));
+    } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
       }
-    });
+    }
+  }
+
+  @override
+  void dispose() {
+    tcpClientProvider?.disconnect();
+    super.dispose();
   }
 
   @override
@@ -34,9 +61,10 @@ class _MainPageState extends State<MainPage> {
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
       final tcpClientProvider = context.watch<TcpClientProvider>();
+      final webRtcProvider = context.watch<WebRtcProvider>();
 
       // While the app isn't connected to the server, show a waiting screen.
-      if (!tcpClientProvider.isConnected) {
+      if (!tcpClientProvider.isConnected && !webRtcProvider.isConnected) {
         return Scaffold(
             body: Stack(
           children: [
@@ -69,10 +97,35 @@ class _MainPageState extends State<MainPage> {
         ));
       }
 
-      return const Scaffold(
-        body: Center(
-          child: Text('Main Page'),
-        ),
+      print('connected to ${widget.connection.ip}:${widget.connection.port}');
+
+      return Scaffold(
+        body: Stack(children: [
+          Positioned(
+              top: 10,
+              left: 0,
+              child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(0),
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: const Icon(Icons.arrow_back, color: Colors.black54))),
+          Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: RTCVideoView(
+                webRtcProvider.remoteVideoRenderer,
+                mirror: true,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              ),
+            ),
+          ),
+        ]),
       );
     });
   }

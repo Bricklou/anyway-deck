@@ -3,6 +3,7 @@ import 'package:anyway_connect/models_provider/tcp_server_provider.dart';
 import 'package:anyway_connect/models_provider/webrtc_provider.dart';
 import 'package:anyway_connect/utils/data_transformation_layer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 
 class WebRtcCard extends StatefulWidget {
@@ -124,8 +125,12 @@ class _WebRtcCard extends State<WebRtcCard> {
   Future<void> _enableServer(WebRtcProvider webRtcProvider,
       TcpServerProvider tcpServerProvider) async {
     await tcpServerProvider.enable();
-    //await webRtcProvider.enable();
-    tcpServerProvider.listen(transformData(webRtcProvider));
+
+    webRtcProvider.onIceCandidate = (RTCIceCandidate event)  {
+      tcpServerProvider.broadcast(IceCandidatePacket.fromCandidate(event));
+    };
+
+    tcpServerProvider.listen(transformData(webRtcProvider, tcpServerProvider));
   }
 
   Future<void> _disableServer(WebRtcProvider webRtcProvider,

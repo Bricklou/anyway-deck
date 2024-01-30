@@ -13,9 +13,17 @@ class PastConnections extends StatefulWidget {
 
 class _PastConnectionsState extends State<PastConnections> {
   @override
+  void initState() {
+    super.initState();
+
+    final tcpClientProvider = context.read<TcpClientProvider>();
+    tcpClientProvider.init();
+  }
+  @override
   Widget build(BuildContext context) {
     return Consumer<TcpClientProvider>(
       builder: (context, tcpClientProvider, child) {
+
         return FutureBuilder(
           future: tcpClientProvider.listHistory(),
           builder: (context, snapshot) {

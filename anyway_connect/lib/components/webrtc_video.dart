@@ -22,7 +22,7 @@ class _WebRTCVideo extends State<WebRTCVideo> {
     }
 
     return RTCVideoView(
-      webrtcProvider.localRenderer!,
+      webrtcProvider.localVideoRenderer,
       mirror: true,
       objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
     );

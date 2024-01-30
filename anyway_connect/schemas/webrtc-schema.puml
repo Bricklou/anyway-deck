@@ -1,0 +1,33 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor "Remote" as R
+participant "Remote Socket" as RS
+participant "Connect Socket\nServer" as CS
+actor "Connect" as C
+
+== Initialization ==
+RS -> CS : InitConnection
+
+== WebRTC SDP sharing ==
+CS -> C : createOffer()
+activate C
+C -> C : setLocalDescription(offer)
+C --> CS : RTCSessionDescription (offer)
+deactivate C
+
+CS -> RS : SdpDescriptionPacket (offer)
+
+RS -> R : createAnswer()
+activate R
+R -> R : setRemoteDescription()
+R -> R : createAnswer()
+R -> R : setLocalDescription()
+R --> RS : RTCSessionDescription (answer)
+deactivate R
+RS -> CS : SdpDescriptionPacket (answer)
+CS -> C : setRemoteDescription()
+
+== ICE Candidate sharing ==
+
+@enduml

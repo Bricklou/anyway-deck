@@ -1,132 +1,88 @@
 import 'dart:async';
 
+import 'package:anyway_connect/models/TcpPacket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 /// https://blog.flutter.wtf/video-chat-in-flutter-using-webrtc/
 class WebRtcProvider with ChangeNotifier {
-  static const Map<String, dynamic> _configuration = {};
+  // RTC peer connection
+  RTCPeerConnection? _rtcPeerConnection;
 
-  final List<StreamSubscription> _subscriptions = [];
-
-  RTCVideoRenderer? _localRenderer;
-
+  // mediaStream for localPeer
   MediaStream? _localStream;
-  MediaStream? _remoteStream;
-  RTCPeerConnection? _peerConnection;
 
-  bool _isConnected = false;
-  bool _videoDisabled = false;
+  // videoRenderer for localPeer
+  final _localRTCVideoRenderer = RTCVideoRenderer();
 
-  bool get isConnected => _isConnected;
-  RTCVideoRenderer? get localRenderer => _localRenderer;
+  // list of rtcCandidates to be sent over signalling
+  List<RTCIceCandidate> rtcIceCandidates = [];
 
-  void setConnected(bool isConnected) {
-    _isConnected = isConnected;
-    notifyListeners();
-  }
+  // On new ice candidate callback
+  void Function(RTCIceCandidate)? onIceCandidate;
 
-  void init() {}
+  RTCVideoRenderer get localVideoRenderer => _localRTCVideoRenderer;
 
-  @override
-  dispose() {
-    disable();
-    super.dispose();
-  }
+  bool get isConnected =>
+      _rtcPeerConnection?.connectionState ==
+      RTCPeerConnectionState.RTCPeerConnectionStateConnected;
 
-  Future<void> enable() async {
-    _localRenderer = RTCVideoRenderer();
-    await _localRenderer!.initialize();
+  Future<void> setupPeerConnection() async {
+    // Create peer connections
+    _rtcPeerConnection = await createPeerConnection({});
 
-    await _enableUserMediaStream();
-    await _createRoom();
-    _enableVideo();
+    // Get localStream
+    print('Getting user media...');
+    _localStream = await navigator.mediaDevices.getUserMedia({
+      'audio': false,
+      'video': {'facingMode': 'environment'},
+    });
+
+    // Add mediaTrack to peerConnection
+    print('Adding local stream...');
+    _localStream!.getTracks().forEach((track) {
+      _rtcPeerConnection!.addTrack(track, _localStream!);
+      notifyListeners();
+    });
+
+    // Set source for local video renderer
+    await _localRTCVideoRenderer.initialize();
+    _localRTCVideoRenderer.srcObject = _localStream;
+
+    // Listen for local iceCandidate and add it to the list of IceCandidates
+    _rtcPeerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+      rtcIceCandidates.add(candidate);
+      onIceCandidate?.call(candidate);
+      notifyListeners();
+    };
   }
 
   Future<void> disable() async {
-    _disableVideo();
-    _localStream?.dispose();
-    _remoteStream?.dispose();
-    _peerConnection?.dispose();
-    _localRenderer?.dispose();
-  }
-  
-  Future<void> _enableUserMediaStream() async {
-    var stream = await navigator.mediaDevices.getUserMedia({ 'video': true }, );
-    _localStream = stream;
-    notifyListeners();
-  }
+    _rtcPeerConnection?.dispose();
 
-  Future<void> _createPeerConnection() async {
-    final peerConnection = await createPeerConnection(_configuration);
-    _peerConnection = peerConnection;
-    notifyListeners();
-  }
-
-  void _enableVideo() {
-    if (_videoDisabled) {
-      _localStream?.getVideoTracks().forEach((track) => track.enabled = true);
-      _videoDisabled = false;
-      notifyListeners();
-    }
-  }
-
-  void _disableVideo() {
-    if (!_videoDisabled) {
-      _localStream?.getVideoTracks().forEach((track) => track.enabled = false);
-      _videoDisabled = true;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _handup() async {
-    if (_localRenderer == null) return;
-
-    final tracks = _localRenderer!.srcObject?.getTracks();
-    for (var track in tracks!) {
+    _localStream?.getTracks().forEach((track) {
       track.stop();
-    }
-
-    if (_peerConnection != null) {
-      await _peerConnection!.close();
-    }
-
-    _localStream!.dispose();
-
-    for (final subs in _subscriptions) {
-      subs.cancel();
-    }
+    });
   }
 
-  Future<void> _createRoom() async {
-    await _createPeerConnection();
-
-    final offer = await _peerConnection!.createOffer();
-    const roomId = 'anyway-connect';
-
-    print('offer: ${offer.sdp?.replaceAll("\r\n", "\\r\\n")}\\r\\n');
-
-    _registerPeerConnectionListeners(roomId);
-
-    await _peerConnection!.setLocalDescription(offer);
-
-    _subscriptions.addAll([
-
-    ]);
+  Future<RTCSessionDescription> createOffer() async {
+    // Create a new SDP offer
+    print('Creating offer...');
+    final offer = await _rtcPeerConnection!.createOffer({});
+    _rtcPeerConnection!.setLocalDescription(offer);
+    return offer;
   }
 
-  void _registerPeerConnectionListeners(String roomId) {
-    _peerConnection!.onIceCandidate = (candidate) {
-      print('onIceCandidate: $candidate');
-    };
+  Future<void> setRemoteDescription(SdpDescriptionPacket packet) async {
+    print('Setting remote description...');
+    // Set SDP answer as remoteDescription for peerConnection
+    await _rtcPeerConnection!
+        .setRemoteDescription(RTCSessionDescription(packet.sdp, packet.type));
+  }
 
-    _peerConnection!.onAddStream = (stream) {
-      _remoteStream = stream;
-      notifyListeners();
-    };
-
-    _peerConnection!.onTrack = (event) {
-      event.streams[0].getTracks().forEach((track) => _remoteStream?.addTrack(track));
-    };
+  void addCandidate(IceCandidatePacket packet) {
+    print('Adding candidate...');
+    _rtcPeerConnection!.addCandidate(
+        RTCIceCandidate(packet.candidate, packet.mId, packet.label));
   }
 }
