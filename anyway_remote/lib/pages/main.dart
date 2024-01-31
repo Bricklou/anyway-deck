@@ -41,8 +41,19 @@ class _MainPageState extends State<MainPage> {
         tcpClientProvider!.send(IceCandidatePacket.fromCandidate(candidate));
       };
 
-      tcpClientProvider!
-          .listen(transformData(webRtcProvider!, tcpClientProvider!));
+      tcpClientProvider!.listen((packet, socket) async {
+        if (packet is EndConnectionPacket) {
+          print('Received end connection packet');
+          webRtcProvider!.disable();
+          tcpClientProvider!.disconnect();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+          return;
+        }
+        return transformData(webRtcProvider!, tcpClientProvider!)(
+            packet, socket);
+      });
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
@@ -101,6 +112,16 @@ class _MainPageState extends State<MainPage> {
 
       return Scaffold(
         body: Stack(children: [
+          Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: RTCVideoView(
+                webRtcProvider.remoteVideoRenderer,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+              ),
+            ),
+          ),
           Positioned(
               top: 10,
               left: 0,
@@ -114,17 +135,6 @@ class _MainPageState extends State<MainPage> {
                     shadowColor: Colors.transparent,
                   ),
                   child: const Icon(Icons.arrow_back, color: Colors.black54))),
-          Center(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: RTCVideoView(
-                webRtcProvider.remoteVideoRenderer,
-                mirror: true,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-              ),
-            ),
-          ),
         ]),
       );
     });

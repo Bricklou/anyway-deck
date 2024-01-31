@@ -9,6 +9,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 class TcpServerProvider with ChangeNotifier {
   ServerSocket? _serverSocket;
   String? _address;
+  Socket? _clientSocket;
 
   get isRunning => _serverSocket != null;
 
@@ -28,7 +29,9 @@ class TcpServerProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void disable() {
+  Future<void> disable() async {
+    await send(EndCommunicationPacket());
+
     _serverSocket?.close();
     _serverSocket = null;
 
@@ -43,7 +46,14 @@ class TcpServerProvider with ChangeNotifier {
 
   void listen(Future<void> Function(TcpPacket data, Socket socket) callback) {
     _serverSocket?.listen((socket) {
-      print('Client connected from ${socket.remoteAddress.address}:${socket.remotePort}');
+      if (_clientSocket != null) {
+        _clientSocket!.close();
+      }
+
+      print(
+          'Client connected from ${socket.remoteAddress.address}:${socket.remotePort}');
+
+      _clientSocket = socket;
 
       socket.listen((data) async {
         final TcpPacket packet = _processPacket(data);
@@ -52,11 +62,11 @@ class TcpServerProvider with ChangeNotifier {
     });
   }
 
-  void broadcast(TcpPacket packet) {
-    _serverSocket?.forEach((socket) {
-      socket.add(packet.toBytes());
-      socket.flush();
-    });
+  Future<void> send(TcpPacket packet) async {
+    if (_clientSocket != null) {
+      _clientSocket!.add(packet.toBytes());
+      _clientSocket!.flush();
+    }
   }
 
   T _processPacket<T extends TcpPacket>(Uint8List packet) {
@@ -86,6 +96,9 @@ class TcpServerProvider with ChangeNotifier {
       case PacketId.sdpDescription:
         print('SdpDescriptionPacket');
         return SdpDescriptionPacket.fromBytes(packet) as T;
+      case PacketId.endConnection:
+        print('EndCommunicationPacket');
+        return EndCommunicationPacket.fromBytes(packet) as T;
       default:
         throw Exception('Invalid packet');
     }

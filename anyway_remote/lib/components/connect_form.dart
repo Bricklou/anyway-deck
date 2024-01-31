@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../models_provider/tcp_client_provider.dart';
 import '../pages/main.dart';

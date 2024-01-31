@@ -13,7 +13,7 @@ class WebRtcProvider with ChangeNotifier {
   MediaStream? _localStream;
 
   // videoRenderer for localPeer
-  final _localRTCVideoRenderer = RTCVideoRenderer();
+  var _localRTCVideoRenderer = RTCVideoRenderer();
 
   // list of rtcCandidates to be sent over signalling
   List<RTCIceCandidate> rtcIceCandidates = [];
@@ -58,11 +58,18 @@ class WebRtcProvider with ChangeNotifier {
   }
 
   Future<void> disable() async {
+    _localRTCVideoRenderer.dispose();
+    _localRTCVideoRenderer = RTCVideoRenderer();
+
     _rtcPeerConnection?.dispose();
+    _rtcPeerConnection = null;
 
     _localStream?.getTracks().forEach((track) {
       track.stop();
     });
+
+    _localStream?.dispose();
+    _localStream = null;
   }
 
   Future<RTCSessionDescription> createOffer() async {

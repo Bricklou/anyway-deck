@@ -26,6 +26,8 @@ Future<void> Function(TcpPacket packet, Socket socket) transformData(
       webRtcProvider.addCandidate(packet);
       return;
     }
+
     // Ignore, the packet is invalid
+    print('Invalid packet');
   };
 }

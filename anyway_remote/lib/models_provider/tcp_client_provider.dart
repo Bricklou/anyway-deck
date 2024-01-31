@@ -81,7 +81,10 @@ class TcpClientProvider with ChangeNotifier {
     _socket?.flush();
   }
 
-  void disconnect() {
+  Future<void> disconnect() async {
+    _socket?.add(EndConnectionPacket().toBytes());
+    await _socket?.flush();
+
     _socket?.close();
     _socket = null;
   }
@@ -96,7 +99,8 @@ class TcpClientProvider with ChangeNotifier {
     final previousHistory = await listHistory();
 
     // Remove the entry if it already exists
-    previousHistory.removeWhere((element) => element.ip == client.ip && element.port == client.port);
+    previousHistory.removeWhere(
+        (element) => element.ip == client.ip && element.port == client.port);
     // Add the entry to the list
     previousHistory.add(DatedRemoteClient.fromMap(entry));
 
@@ -141,19 +145,21 @@ class TcpClientProvider with ChangeNotifier {
   Future<void> deleteHistoryEntry(DatedRemoteClient entry) async {
     final previousHistory = await listHistory();
 
-    previousHistory.removeWhere((element) => element.ip == entry.ip && element.port == entry.port);
+    previousHistory.removeWhere(
+        (element) => element.ip == entry.ip && element.port == entry.port);
     await _prefs!.setStringList(
         "history", previousHistory.map(_mapEntryToString).toList());
 
     notifyListeners();
   }
 
-
-
   void listen(Future<void> Function(TcpPacket data, Socket socket) callback) {
     _socket?.listen((data) {
-        final TcpPacket packet = _processPacket(data);
-        callback(packet, _socket!);
+      final TcpPacket packet = _processPacket(data);
+      if (_socket == null) {
+        return;
+      }
+      callback(packet, _socket!);
     });
   }
 
@@ -181,8 +187,11 @@ class TcpClientProvider with ChangeNotifier {
       case PacketId.iceCandidate:
         print('IceCandidatePacket');
         return IceCandidatePacket.fromBytes(packet) as T;
+      case PacketId.endConnection:
+        print('EndConnectionPacket');
+        return EndConnectionPacket.fromBytes(packet) as T;
       default:
-        throw Exception('Invalid packet');
+        throw Exception('Invalid packet : $packetId');
     }
   }
 }

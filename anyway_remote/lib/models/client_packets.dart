@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:anyway_remote/models/networkTypes.dart';
 import 'package:anyway_remote/models/packets_id.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -50,42 +51,36 @@ class SdpDescriptionPacket implements TcpPacket {
       throw Exception('Invalid packet');
     }
 
-    // Get SDP size
-    var sdpSize = bytes[1];
-    // Get SDP
-    var sdp = String.fromCharCodes(bytes.sublist(2, 2 + sdpSize));
+    int offset = 0;
 
-    // Get type size
-    var typeSize = bytes[2 + sdpSize];
+    // Get SDP
+    var (sdp, sdpSize) = VarString.fromBytes(bytes.sublist(1));
+    offset += sdpSize;
+
     // Get type
-    var type = String.fromCharCodes(bytes.sublist(3 + sdpSize, 3 + sdpSize + typeSize));
+    var (type, typeSize) = VarString.fromBytes(bytes.sublist(1 + offset));
+    offset += typeSize;
 
     // Return the packet type
-    return SdpDescriptionPacket(sdp: sdp, type: type);
+    return SdpDescriptionPacket(sdp: sdp.value, type: type.value);
   }
 
   @override
   Uint8List toBytes() {
     // Get sdp
-    var sdp = Uint8List.fromList(this.sdp!.codeUnits);
-    var sdpLength = ByteData(4)..setInt32(0, sdp.length);
+    var sdp = VarString(this.sdp!);
     // Get type
-    var type = Uint8List.fromList(this.type!.codeUnits);
-    var typeLength = ByteData(4)..setInt32(0, type.length);
+    var type = VarString(this.type!);
 
     return Uint8List.fromList([
       // Packet type
       id.index,
 
-      // SDP size (ensure it is 32 bits integer with padding)
-      ...sdpLength.buffer.asUint8List(),
       // SDP
-      ...sdp,
+      ...sdp.toBytes(),
 
-      // Type size
-      ...typeLength.buffer.asUint8List(),
       // Type
-      ...type,
+      ...type.toBytes(),
     ]);
   }
 }
@@ -103,33 +98,32 @@ class IceCandidatePacket implements TcpPacket {
   @override
   Uint8List toBytes() {
     // Get candidate
-    var candidate = Uint8List.fromList(this.candidate!.codeUnits);
-    var candidateLength = ByteData(4)..setInt32(0, candidate.length);
+    var candidate = VarString(this.candidate!);
     // Get candidateId
-    var mId = Uint8List.fromList(this.mId!.codeUnits);
-    var mIdLength = ByteData(4)..setInt32(0, mId.length);
+    var mId = VarString(this.mId!);
+    // Get label (ensure it is 32 bits integer with padding)
+    var label = ByteData(4)..setInt32(0, this.label!);
 
     return Uint8List.fromList([
       // Packet type
       id.index,
 
-      // Candidate size
-      ...candidateLength.buffer.asUint8List(),
       // Candidate
-      ...candidate,
+      ...candidate.toBytes(),
 
-      // CandidateId size
-      ...mIdLength.buffer.asUint8List(),
       // CandidateId
-      ...mId,
+      ...mId.toBytes(),
 
       // Label
-      label!,
+      ...label.buffer.asUint8List(),
     ]);
   }
 
   static IceCandidatePacket fromCandidate(RTCIceCandidate candidate) {
-    return IceCandidatePacket(candidate: candidate.candidate, mId: candidate.sdpMid, label: candidate.sdpMLineIndex);
+    return IceCandidatePacket(
+        candidate: candidate.candidate,
+        mId: candidate.sdpMid,
+        label: candidate.sdpMLineIndex);
   }
 
   static IceCandidatePacket fromBytes(Uint8List bytes) {
@@ -138,20 +132,41 @@ class IceCandidatePacket implements TcpPacket {
       throw Exception('Invalid packet');
     }
 
-    // Get candidate size
-    var candidateSize = bytes[1];
+    int offset = 0;
     // Get candidate
-    var candidate = String.fromCharCodes(bytes.sublist(2, 2 + candidateSize));
+    var (candidate, candidateSize) = VarString.fromBytes(bytes.sublist(1));
+    offset += candidateSize;
 
-    // Get candidateId size
-    var candidateIdSize = bytes[2 + candidateSize];
     // Get candidateId
-    var candidateId = String.fromCharCodes(bytes.sublist(3 + candidateSize, 3 + candidateSize + candidateIdSize));
+    var (candidateId, mIdSize) = VarString.fromBytes(bytes.sublist(1 + offset));
+    offset += mIdSize;
 
     // Get label
-    var label = bytes[3 + candidateSize + candidateIdSize];
+    var label =
+        ByteData.sublistView(bytes, 1 + offset, 1 + offset + 4).getInt32(0);
 
     // Return the packet type
-    return IceCandidatePacket(candidate: candidate, mId: candidateId, label: label);
+    return IceCandidatePacket(
+        candidate: candidate.value, mId: candidateId.value, label: label);
+  }
+}
+
+class EndConnectionPacket implements TcpPacket {
+  @override
+  PacketId id = PacketId.endConnection;
+
+  static EndConnectionPacket fromBytes(Uint8List bytes) {
+    // Check if the packet is valid
+    if (bytes.length != 1) {
+      throw Exception('Invalid packet');
+    }
+
+    // Return the packet type
+    return EndConnectionPacket();
+  }
+
+  @override
+  Uint8List toBytes() {
+    return Uint8List.fromList([id.index]);
   }
 }

@@ -126,8 +126,8 @@ class _WebRtcCard extends State<WebRtcCard> {
       TcpServerProvider tcpServerProvider) async {
     await tcpServerProvider.enable();
 
-    webRtcProvider.onIceCandidate = (RTCIceCandidate event)  {
-      tcpServerProvider.broadcast(IceCandidatePacket.fromCandidate(event));
+    webRtcProvider.onIceCandidate = (RTCIceCandidate event) {
+      tcpServerProvider.send(IceCandidatePacket.fromCandidate(event));
     };
 
     tcpServerProvider.listen(transformData(webRtcProvider, tcpServerProvider));
@@ -135,7 +135,7 @@ class _WebRtcCard extends State<WebRtcCard> {
 
   Future<void> _disableServer(WebRtcProvider webRtcProvider,
       TcpServerProvider tcpServerProvider) async {
+    await tcpServerProvider.disable();
     await webRtcProvider.disable();
-    tcpServerProvider.disable();
   }
 }

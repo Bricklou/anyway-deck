@@ -4,7 +4,8 @@ import 'package:anyway_connect/models/TcpPacket.dart';
 import 'package:anyway_connect/models_provider/tcp_server_provider.dart';
 import 'package:anyway_connect/models_provider/webrtc_provider.dart';
 
-Future<void> Function(TcpPacket packet, Socket socket) transformData(WebRtcProvider webRtcProvider, TcpServerProvider tcpServerProvider) {
+Future<void> Function(TcpPacket packet, Socket socket) transformData(
+    WebRtcProvider webRtcProvider, TcpServerProvider tcpServerProvider) {
   return (TcpPacket packet, Socket socket) async {
     if (packet is InitConnectionPacket) {
       // Send packet
@@ -32,6 +33,14 @@ Future<void> Function(TcpPacket packet, Socket socket) transformData(WebRtcProvi
       // When the client sends an ICE candidate
       print('Received ice candidate');
       webRtcProvider.addCandidate(packet);
+      return;
+    }
+
+    if (packet is EndCommunicationPacket) {
+      // When the client ends the communication
+      print('Client ended communication');
+      await tcpServerProvider.send(EndCommunicationPacket());
+      await webRtcProvider.disable();
       return;
     }
     // Ignore, the packet is invalid

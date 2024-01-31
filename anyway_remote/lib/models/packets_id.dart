@@ -3,6 +3,8 @@ enum PacketId {
   initConnection,
   // Received to announce the WebRTC offer/answer
   sdpDescription,
+  // Received sdp answer
+  peerAnswer,
   // Received for new ice candidate
   iceCandidate,
   endConnection,

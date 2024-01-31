@@ -1,9 +1,8 @@
-import 'package:anyway_connect/components/webrtc_cart.dart';
+import 'package:anyway_connect/components/webrtc_card.dart';
 import 'package:anyway_connect/components/bluetooth_card.dart';
 import 'package:anyway_connect/components/webrtc_video.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 
 import '../models_provider/bluetooth_provider.dart';
@@ -100,7 +99,8 @@ class _MainPage extends State<MainPage> {
         borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
       ),
-      child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child:
+          const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(height: 15),
         IntrinsicHeight(
             child: Row(

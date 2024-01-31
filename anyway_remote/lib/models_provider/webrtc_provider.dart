@@ -7,7 +7,7 @@ class WebRtcProvider with ChangeNotifier {
   RTCPeerConnection? _rtcPeerConnection;
 
   // videoRenderer for remotePeer
-  final _remoteRTCVideoRenderer = RTCVideoRenderer();
+  var _remoteRTCVideoRenderer = RTCVideoRenderer();
 
   // On new ice candidate callback
   void Function(RTCIceCandidate)? onIceCandidate;
@@ -23,8 +23,9 @@ class WebRtcProvider with ChangeNotifier {
     _rtcPeerConnection = await createPeerConnection({});
 
     // listen for remotePeer mediaTrack event
-    _rtcPeerConnection!.onTrack = (event) {
+    _rtcPeerConnection!.onTrack = (event) async {
       print('Got remote track: ${event.streams[0]}');
+      await _remoteRTCVideoRenderer.initialize();
       _remoteRTCVideoRenderer.srcObject = event.streams[0];
       notifyListeners();
     };
@@ -36,7 +37,13 @@ class WebRtcProvider with ChangeNotifier {
     };
   }
 
-  Future<void> disable() async {}
+  Future<void> disable() async {
+    _remoteRTCVideoRenderer.dispose();
+    _remoteRTCVideoRenderer = RTCVideoRenderer();
+
+    _rtcPeerConnection?.close();
+    _rtcPeerConnection = null;
+  }
 
   Future<RTCSessionDescription> createAnswer(SdpDescriptionPacket offer) async {
     // Set SDP offer as remoteDescription for peerConnection
@@ -54,6 +61,7 @@ class WebRtcProvider with ChangeNotifier {
   }
 
   void addCandidate(IceCandidatePacket candidatePacket) {
+    print('Adding candidate');
     _rtcPeerConnection!.addCandidate(RTCIceCandidate(
         candidatePacket.candidate, candidatePacket.mId, candidatePacket.label));
   }
