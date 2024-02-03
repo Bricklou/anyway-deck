@@ -6,7 +6,7 @@ import '../models/client_packets.dart';
 import '../models_provider/webrtc_provider.dart';
 
 Future<void> Function(TcpPacket packet, Socket socket) transformData(
-    WebRtcProvider webRtcProvider, TcpClientProvider tcpServerProvider) {
+    WebRtcProvider webRtcProvider, TcpClientProvider tcpClientProvider) {
   return (TcpPacket packet, Socket socket) async {
     if (packet is SdpDescriptionPacket) {
       // Send packet
@@ -24,6 +24,13 @@ Future<void> Function(TcpPacket packet, Socket socket) transformData(
     if (packet is IceCandidatePacket) {
       print('Received ice candidate');
       webRtcProvider.addCandidate(packet);
+      return;
+    }
+    
+    if (packet is EndConnectionPacket) {
+      print('Client ended communication');
+      tcpClientProvider.send(EndConnectionPacket());
+      await webRtcProvider.disable();
       return;
     }
 

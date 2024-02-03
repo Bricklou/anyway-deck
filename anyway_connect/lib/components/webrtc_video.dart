@@ -21,10 +21,15 @@ class _WebRTCVideo extends State<WebRTCVideo> {
       );
     }
 
-    return RTCVideoView(
-      webrtcProvider.localVideoRenderer,
-      mirror: true,
-      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: RTCVideoView(
+          webrtcProvider.localVideoRenderer,
+          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+        ),
+      ),
     );
   }
 }

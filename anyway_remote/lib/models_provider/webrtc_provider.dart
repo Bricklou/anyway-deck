@@ -43,6 +43,8 @@ class WebRtcProvider with ChangeNotifier {
 
     _rtcPeerConnection?.close();
     _rtcPeerConnection = null;
+
+    notifyListeners();
   }
 
   Future<RTCSessionDescription> createAnswer(SdpDescriptionPacket offer) async {

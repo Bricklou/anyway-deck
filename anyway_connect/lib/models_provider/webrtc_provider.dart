@@ -23,9 +23,8 @@ class WebRtcProvider with ChangeNotifier {
 
   RTCVideoRenderer get localVideoRenderer => _localRTCVideoRenderer;
 
-  bool get isConnected =>
-      _rtcPeerConnection?.connectionState ==
-      RTCPeerConnectionState.RTCPeerConnectionStateConnected;
+  bool _isConnected = false;
+  bool get isConnected => _isConnected;
 
   Future<void> setupPeerConnection() async {
     // Create peer connections
@@ -55,9 +54,22 @@ class WebRtcProvider with ChangeNotifier {
       onIceCandidate?.call(candidate);
       notifyListeners();
     };
+
+    _rtcPeerConnection?.onConnectionState = (state) {
+      print('Connection state: $state');
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        _isConnected = true;
+      } else {
+        _isConnected = false;
+      }
+      notifyListeners();
+    };
+
+    notifyListeners();
   }
 
   Future<void> disable() async {
+    print('Disabling WebRTC...');
     _localRTCVideoRenderer.dispose();
     _localRTCVideoRenderer = RTCVideoRenderer();
 
@@ -70,6 +82,10 @@ class WebRtcProvider with ChangeNotifier {
 
     _localStream?.dispose();
     _localStream = null;
+
+    _isConnected = false;
+
+    notifyListeners();
   }
 
   Future<RTCSessionDescription> createOffer() async {
