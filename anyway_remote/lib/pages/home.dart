@@ -1,3 +1,4 @@
+import 'package:anyway_remote/components/steam_input_demo.dart';
 import 'package:anyway_remote/components/connect_form.dart';
 import 'package:anyway_remote/components/past_connections.dart';
 import 'package:flutter/material.dart';
@@ -34,8 +35,7 @@ class _HomePageState extends State<HomePage> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _renderHeaderCard(),
           const SizedBox(height: 20),
           const Padding(
@@ -48,7 +48,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          const Expanded(child: PastConnections())
+          const Expanded(child: PastConnections()),
+          const Expanded(child: SteamInputDemo())
         ])
       ],
     );

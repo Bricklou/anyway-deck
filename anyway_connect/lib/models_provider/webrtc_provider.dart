@@ -8,6 +8,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 class WebRtcProvider with ChangeNotifier {
   // RTC peer connection
   RTCPeerConnection? _rtcPeerConnection;
+  // Data channel for peer connection
+  RTCDataChannel? _dataChannel;
 
   // mediaStream for localPeer
   MediaStream? _localStream;
@@ -47,6 +49,10 @@ class WebRtcProvider with ChangeNotifier {
     // Set source for local video renderer
     await _localRTCVideoRenderer.initialize();
     _localRTCVideoRenderer.srcObject = _localStream;
+    
+    // Create data channel
+    RTCDataChannelInit dataChannelDict = RTCDataChannelInit()..maxRetransmits = 30;
+    _dataChannel  = await _rtcPeerConnection!.createDataChannel("control", dataChannelDict);
 
     // Listen for local iceCandidate and add it to the list of IceCandidates
     _rtcPeerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
@@ -72,6 +78,9 @@ class WebRtcProvider with ChangeNotifier {
     print('Disabling WebRTC...');
     _localRTCVideoRenderer.dispose();
     _localRTCVideoRenderer = RTCVideoRenderer();
+
+    _dataChannel?.close();
+    _dataChannel = null;
 
     _rtcPeerConnection?.dispose();
     _rtcPeerConnection = null;

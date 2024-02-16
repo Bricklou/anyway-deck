@@ -1,0 +1,48 @@
+{
+  // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+  // Pointez pour afficher la description des attributs existants.
+  // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "anyway_connect",
+      "cwd": "anyway_connect",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "anyway_connect (profile mode)",
+      "cwd": "anyway_connect",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "anyway_connect (release mode)",
+      "cwd": "anyway_connect",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    },
+    {
+      "name": "anyway_remote",
+      "cwd": "anyway_remote",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "anyway_remote (profile mode)",
+      "cwd": "anyway_remote",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "anyway_remote (release mode)",
+      "cwd": "anyway_remote",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}

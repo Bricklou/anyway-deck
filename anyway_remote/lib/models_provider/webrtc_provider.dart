@@ -8,6 +8,8 @@ class WebRtcProvider with ChangeNotifier {
 
   // videoRenderer for remotePeer
   var _remoteRTCVideoRenderer = RTCVideoRenderer();
+  // Data channel
+  RTCDataChannel? _dataChannel;
 
   // On new ice candidate callback
   void Function(RTCIceCandidate)? onIceCandidate;
@@ -32,7 +34,14 @@ class WebRtcProvider with ChangeNotifier {
 
     // Listen for local iceCandidate and add it to the list of IceCandidates
     _rtcPeerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+      print('Got ice candidate');
       onIceCandidate?.call(candidate);
+      notifyListeners();
+    };
+
+    _rtcPeerConnection!.onDataChannel = (RTCDataChannel dataChannel) {
+      print('Data channel created');
+      _dataChannel = dataChannel;
       notifyListeners();
     };
   }
@@ -40,6 +49,9 @@ class WebRtcProvider with ChangeNotifier {
   Future<void> disable() async {
     _remoteRTCVideoRenderer.dispose();
     _remoteRTCVideoRenderer = RTCVideoRenderer();
+
+    _dataChannel?.close();
+    _dataChannel = null;
 
     _rtcPeerConnection?.close();
     _rtcPeerConnection = null;
