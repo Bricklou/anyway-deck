@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:anyway_connect/models/TcpPacket.dart';
 import 'package:anyway_connect/models/packet_id.dart';
 import 'package:flutter/material.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 class TcpServerProvider with ChangeNotifier {
   ServerSocket? _serverSocket;
@@ -20,7 +19,12 @@ class TcpServerProvider with ChangeNotifier {
     if (_serverSocket == null) {
       _serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, 4835);
 
-      _address = await NetworkInfo().getWifiIP();
+      var interfaces =
+          await NetworkInterface.list(type: InternetAddressType.IPv4);
+
+      var address = interfaces.first;
+      // Set the address
+      _address = address.addresses.first.address;
 
       // Do stuff
       print(

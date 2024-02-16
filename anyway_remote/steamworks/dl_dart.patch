@@ -1,0 +1,48 @@
+--- ./lib/steamworks/src/generated/dl.dart	2024-02-16 13:52:43.223396399 +0100
++++ ./lib/steamworks/src/generated/dl.dart	2024-02-16 13:52:43.223396399 +0100
+@@ -2,8 +2,39 @@
+ import "dart:ffi";
+ import "dart:io";
+ 
+-DynamicLibrary dl = Platform.isWindows
+-    ? DynamicLibrary.open("./steam_api64.dll")
+-    : Platform.isLinux
+-        ? DynamicLibrary.open("./libsteam_api.so")
+-        : DynamicLibrary.open("./libsteam_api.dylib");
++
++DynamicLibrary _loadLibrary() {
++  // Root search path variable
++  const String rootSearchPath =
++      String.fromEnvironment('STEAM_API_PATH', defaultValue: '.');
++
++  // If the path doesn't exists, throw an error
++  if (!Directory(rootSearchPath).existsSync()) {
++    throw Exception(
++        """The path "$rootSearchPath" doesn't exists, please set the correct path""");
++  }
++
++  String libraryPath = rootSearchPath;
++
++  // Set the library path
++  if (Platform.isLinux) {
++    libraryPath = "$rootSearchPath/libsteam_api.so";
++  } else if (Platform.isWindows) {
++    libraryPath = "$rootSearchPath/steam_api64.dll";
++  } else if (Platform.isMacOS) {
++    libraryPath = "$rootSearchPath/libsteam_api.dylib";
++  } else {
++    throw Exception("Unsupported platform");
++  }
++
++  // If the library doesn't exists, throw an error
++  if (!File.fromUri(Uri.file(libraryPath)).existsSync()) {
++    throw Exception(
++        """The library "$libraryPath" doesn't exists, please set the correct path""");
++  }
++
++  // Load the library
++  return DynamicLibrary.open(libraryPath);
++}
++
++DynamicLibrary dl = _loadLibrary();
++

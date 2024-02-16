@@ -19,7 +19,12 @@ class _SteamInputDemoState extends State<SteamInputDemo> {
     super.initState();
     // print current working dir
     print(Directory.current.path);
-    SteamClient.init(appId: STEAM_APP_ID);
+    try {
+      SteamClient.init(appId: STEAM_APP_ID);
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
 
     var client = SteamClient.instance;
 
@@ -30,8 +35,9 @@ class _SteamInputDemoState extends State<SteamInputDemo> {
         calloc.allocate<UnsignedLongLong>(128);
 
     var inputHandle = input.getConnectedControllers(inputHandles);
+    print("inputHandle");
     print(inputHandle);
-    var actionSetHandle = input.getActionSetHandle("AnwayDeck".toNativeUtf8());
+    var actionSetHandle = input.getActionSetHandle("AnywayDeck".toNativeUtf8());
     input.activateActionSet(inputHandle, actionSetHandle);
 
     calloc.free(inputHandles);

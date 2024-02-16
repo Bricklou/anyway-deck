@@ -1,0 +1,11 @@
+--- "./lib/steamworks/src/generated/initializers/steam_api copy.dart"	2024-02-16 15:09:32.492846136 +0100
++++ ./lib/steamworks/src/generated/initializers/steam_api.dart	2024-02-16 15:09:39.859431995 +0100
+@@ -4,7 +4,7 @@
+ import "../typedefs.dart";
+ 
+ final _init =
+-    dl.lookupFunction<Bool Function(), bool Function()>("SteamAPI_Init");
++    dl.lookupFunction<Bool Function(), bool Function()>("SteamAPI_InitSafe");
+ 
+ final _releaseCurrentThreadMemory =
+     dl.lookupFunction<Void Function(), void Function()>(

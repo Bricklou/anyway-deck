@@ -99,8 +99,8 @@ class SteamClient extends SteamBase {
   /// Accesses user instance of [ISteamUgc]
   Pointer<ISteamUgc> get steamUgc => ISteamUgc.userInstance;
 
-  /// Accesses user instance of [ISteamAppList]
-  Pointer<ISteamAppList> get steamAppList => ISteamAppList.userInstance;
+  /// Accesses user instance of [ISteamApps]
+  Pointer<ISteamApps> get steamAppList => ISteamApps.userInstance;
 
   /// Accesses user instance of [ISteamHtmlSurface]
   Pointer<ISteamHtmlSurface> get steamHtmlSurface =>
@@ -108,9 +108,6 @@ class SteamClient extends SteamBase {
 
   /// Accesses user instance of [ISteamInventory]
   Pointer<ISteamInventory> get steamInventory => ISteamInventory.userInstance;
-
-  /// Accesses user instance of [ISteamVideo]
-  Pointer<ISteamVideo> get steamVideo => ISteamVideo.userInstance;
 
   /// Accesses user instance of [ISteamParentalSettings]
   Pointer<ISteamParentalSettings> get steamParentalSettings =>
@@ -134,6 +131,6 @@ class SteamClient extends SteamBase {
 
   SteamClient._()
       : super(
-    pipe: SteamApi.getHSteamPipe(),
-  );
+          pipe: SteamApi.getHSteamPipe(),
+        );
 }

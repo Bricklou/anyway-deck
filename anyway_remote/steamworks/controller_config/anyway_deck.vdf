@@ -1,0 +1,56 @@
+"Anyway Deck Controls"
+{
+    "actions"
+    {
+        "AllDeckControls"
+        {
+            "title":                    "#Set_AllDeckControls"
+            "StickPadGyro"
+            {
+                "Move1"
+                {
+                    "title"             "#Action_Move1"
+                    "input_mode"        "joystick_move"
+                }
+                "Move2"
+                {
+                    "title"             "#Action_Move2"
+                    "input_mode"        "joystick_move"
+                }
+                "Move3"
+                {
+                    "title"             "#Action_Move3"
+                    "input_mode"        "joystick_move"
+                }
+                "Move4"
+                {
+                    "title"             "#Action_Move4"
+                    "input_mode"        "joystick_move"
+                }
+                "Mouse1"
+                {
+                    "title"             "#Action_Mouse1"
+                    "input_mode"        "mouse_move"
+                }
+                "Mouse2"
+                {
+                    "title"             "#Action_Mouse2"
+                    "input_mode"        "mouse_move"
+                }
+            }
+        }
+    }
+    "localization"
+    {
+        "english"
+        {
+            "Set_AllDeckControls"       "All Deck Controls"
+            "Action_Move1"				"Move 1"
+			"Action_Move2"				"Move 2"
+			"Action_Move3"				"Move 3"
+			"Action_Mouse1"				"Mouse 1"
+			"Action_Mouse2"				"Mouse 2"
+			"Action_Mouse3"				"Mouse 3"
+        }
+    }
+}
