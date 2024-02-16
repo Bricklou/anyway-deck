@@ -11,7 +11,7 @@ URL = https://partner.steamgames.com/downloads/$(ARCHIVE)
 
 $(ARCHIVE_FILE):
 	@echo "Downloading Steamworks SDK... ($(ARCHIVE))"
-	@curl -fL -o $(ARCHIVE_FILE) $(URL)
+	@curl -fL -o $(ARCHIVE_FILE) "$(URL)"
 
 $(LIBSTEAM_API_SO_PATH): $(ARCHIVE_FILE)
 	@echo "Extracting $(LIBSTEAM_API_SO) from Steamworks SDK..."
